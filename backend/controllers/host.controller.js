@@ -40,25 +40,35 @@ exports.addHostData = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Missing required fields");
     }
 
-    const propertyImagesPath = req.files || [];
+    const propertyImagesFiles = req.files || [];
     
-    if (propertyImagesPath.length === 0) {
+    if (propertyImagesFiles.length === 0) {
       throw new ApiError(400, "Property images are required");
     }
 
+    console.log(`📤 Uploading ${propertyImagesFiles.length} images to Cloudinary...`);
+
     const propertyImages = [];
 
-    for (const file of propertyImagesPath) {
+    // ✅ CHANGED: Use file.buffer instead of file.path
+    for (const file of propertyImagesFiles) {
       try {
-        const uploaded = await uploadOnCloudinary(file.path);
-        if (uploaded && uploaded.url) {
-          propertyImages.push(uploaded.url);
+        const uploaded = await uploadOnCloudinary(file.buffer); // ✅ Use buffer
+        if (uploaded && uploaded.secure_url) { // ✅ secure_url not url
+          propertyImages.push(uploaded.secure_url);
+          console.log("✅ Uploaded:", uploaded.secure_url);
         }
       } catch (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw new ApiError(500, "Failed to upload images");
+        console.error("❌ Upload error:", uploadError);
+        throw new ApiError(500, `Failed to upload image: ${uploadError.message}`);
       }
     }
+
+    if (propertyImages.length === 0) {
+      throw new ApiError(500, "No images were successfully uploaded");
+    }
+
+    console.log(`✅ All ${propertyImages.length} images uploaded successfully`);
 
     const host = await Host.create({
       userId: req.user.id,
@@ -86,22 +96,29 @@ exports.addHostData = asyncHandler(async (req, res) => {
     );
     
   } catch (err) {
-    console.error("Error details:", err);
+    console.error("❌ Error details:", err);
     console.log('Body:', req.body);
-    console.log('Files:', req.files);
+    console.log('Files:', req.files?.length || 0);
     
-    // ✅ Better eror handling
+    // ✅ Better error handling
     if (err.name === 'SequelizeValidationError') {
       const messages = err.errors.map(e => e.message).join(', ');
-      return res.status(400).json({ error: messages });
+      return res.status(400).json({ 
+        success: false,
+        message: messages 
+      });
     }
     
     if (err.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({ error: "Contact number already exists" });
+      return res.status(400).json({ 
+        success: false,
+        message: "Contact number already exists" 
+      });
     }
     
     res.status(err.statusCode || 500).json({ 
-      error: err.message || "Internal server error" 
+      success: false,
+      message: err.message || "Internal server error" 
     });
   }
 });

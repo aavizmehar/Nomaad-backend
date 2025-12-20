@@ -1,53 +1,31 @@
 const cloudinary = require("cloudinary").v2;
-const fs = require("fs");
+const streamifier = require('streamifier');
 
-// Configuration
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if (!localFilePath) {
-            console.log("❌ No file path provided");
-            return null;
-        }
+const uploadOnCloudinary = async (fileBuffer) => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { 
+                resource_type: "auto",
+                folder: "nomadyatra" 
+            },
+            (error, result) => {
+                if (error) {
+                    console.error("❌ Cloudinary upload error:", error);
+                    return reject(error);
+                }
+                console.log("✅ File uploaded to Cloudinary:", result.secure_url);
+                resolve(result);
+            }
+        );
         
-        // Check if file exists
-        if (!fs.existsSync(localFilePath)) {
-            console.log("❌ File does not exist:", localFilePath);
-            return null;
-        }
-        
-        console.log("📤 Uploading to Cloudinary:", localFilePath);
-        
-        // Upload file to cloudinary
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto",
-            folder: "nomadyatra"
-        });
-        
-        console.log("✅ Uploaded to Cloudinary:", response.secure_url);
-        
-        // Delete local file after successful upload
-        fs.unlinkSync(localFilePath);
-        console.log("🗑️ Deleted local file:", localFilePath);
-        
-        return response;
-        
-    } catch (error) {
-        console.error("❌ Cloudinary upload error:", error.message);
-        
-        // Remove temp file even if upload failed
-        if (localFilePath && fs.existsSync(localFilePath)) {
-            fs.unlinkSync(localFilePath);
-            console.log("🗑️ Cleaned up failed upload file");
-        }
-        
-        return null;
-    }
+        streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
 };
 
 module.exports = uploadOnCloudinary;
