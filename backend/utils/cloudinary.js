@@ -1,5 +1,5 @@
-const cloudinary = require("cloudinary").v2
-const fs = require("fs")
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
 
 // Configuration
 cloudinary.config({
@@ -10,19 +10,44 @@ cloudinary.config({
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
-        if (!localFilePath) return null
-        // upload file on cloudinary
+        if (!localFilePath) {
+            console.log("❌ No file path provided");
+            return null;
+        }
+        
+        // Check if file exists
+        if (!fs.existsSync(localFilePath)) {
+            console.log("❌ File does not exist:", localFilePath);
+            return null;
+        }
+        
+        console.log("📤 Uploading to Cloudinary:", localFilePath);
+        
+        // Upload file to cloudinary
         const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
-        // file successfully uploaded
-        console.log("file is uploaded on cloudinary",
-            response.url);
+            resource_type: "auto",
+            folder: "nomadyatra"
+        });
+        
+        console.log("✅ Uploaded to Cloudinary:", response.secure_url);
+        
+        // Delete local file after successful upload
+        fs.unlinkSync(localFilePath);
+        console.log("🗑️ Deleted local file:", localFilePath);
+        
         return response;
+        
     } catch (error) {
-        fs.unlinkSync(localFilePath)
-        // remove temp local file
+        console.error("❌ Cloudinary upload error:", error.message);
+        
+        // Remove temp file even if upload failed
+        if (localFilePath && fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+            console.log("🗑️ Cleaned up failed upload file");
+        }
+        
         return null;
     }
-}
-module.exports= uploadOnCloudinary
+};
+
+module.exports = uploadOnCloudinary;
