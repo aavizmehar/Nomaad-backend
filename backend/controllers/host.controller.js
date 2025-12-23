@@ -1,14 +1,13 @@
 const Host = require('../models/Host.model')
 const User = require('../models/User.model')
-const Program = require('../models/Program.model') // Add this import
+const Program = require('../models/Program.model')
 const Volunteer = require('../models/Volunteer.model')
-const Application = require('../models/Application.model') // Add this import
+const Application = require('../models/Application.model') 
 const ApiError = require('../utils/ApiError')
 const ApiResponse = require('../utils/ApiResponse')
 const asyncHandler = require("../utils/asyncHandler")
 const uploadOnCloudinary = require("../utils/cloudinary")
 
-// Import your category constants
 const { 
   PROGRAM_CATEGORIES, 
   CATEGORY_SUBCATEGORIES 
@@ -50,11 +49,10 @@ exports.addHostData = asyncHandler(async (req, res) => {
 
     const propertyImages = [];
 
-    // ✅ CHANGED: Use file.buffer instead of file.path
     for (const file of propertyImagesFiles) {
       try {
-        const uploaded = await uploadOnCloudinary(file.buffer); // ✅ Use buffer
-        if (uploaded && uploaded.secure_url) { // ✅ secure_url not url
+        const uploaded = await uploadOnCloudinary(file.buffer); 
+        if (uploaded && uploaded.secure_url) { 
           propertyImages.push(uploaded.secure_url);
           console.log("✅ Uploaded:", uploaded.secure_url);
         }
@@ -100,7 +98,6 @@ exports.addHostData = asyncHandler(async (req, res) => {
     console.log('Body:', req.body);
     console.log('Files:', req.files?.length || 0);
     
-    // ✅ Better error handling
     if (err.name === 'SequelizeValidationError') {
       const messages = err.errors.map(e => e.message).join(', ');
       return res.status(400).json({ 
@@ -123,7 +120,6 @@ exports.addHostData = asyncHandler(async (req, res) => {
   }
 });
 
-// 2️⃣ EDIT HOST PROFILE
 exports.editProfile = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
@@ -178,7 +174,6 @@ exports.seeApplications = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Only hosts can see applications");
   }
 
-  // 1️⃣ Find host profile
   const host = await Host.findOne({
     where: { userId: req.user.id },
   });
@@ -187,7 +182,6 @@ exports.seeApplications = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Host profile not found");
   }
 
-  // 2️⃣ Get programs created by this host
   const programs = await Program.findAll({
     where: { hostId: host.hostId },
     attributes: ["programId"],
@@ -201,7 +195,6 @@ exports.seeApplications = asyncHandler(async (req, res) => {
     );
   }
 
-  // 3️⃣ Get applications + volunteer details
   const applications = await Application.findAll({
     where: { programId: programIds },
     include: [
@@ -243,14 +236,13 @@ exports.seeApplications = asyncHandler(async (req, res) => {
     )
   );
 });
-// 5.5️⃣ UPDATE APPLICATION STATUS
 exports.updateApplicationStatus = asyncHandler(async (req, res) => {
   if (req.user.role !== "host") {
     throw new ApiError(403, "Only hosts can update application status");
   }
 
   const { applicationId } = req.params;
-  const { status } = req.body; // "accepted", "rejected", "pending"
+  const { status } = req.body; 
 
   const host = await Host.findOne({
     where: { userId: req.user.id }
