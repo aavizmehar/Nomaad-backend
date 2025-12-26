@@ -16,7 +16,7 @@ router.get('/google', (req, res, next) => {
 
 router.get('/google/callback',
     passport.authenticate('google', {
-        failureRedirect: 'http://localhost:3000/',
+        failureRedirect: process.env.CORS_ORIGIN,
         session: false
     }),
     async (req, res) => {
