@@ -1,13 +1,9 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
-const isProduction = process.env.NODE_ENV === 'production';
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   logging: false,
-  dialectOptions: isProduction
-    ? { ssl: { require: true, rejectUnauthorized: false } }
-    : {}
 });
 
 const connectDb = async () => {
@@ -16,7 +12,7 @@ const connectDb = async () => {
       .then(() => console.log('Database connected'))
       .catch(err => console.error('DB connection error:', err));
 
-    await sequelize.sync()
+    await sequelize.sync({alter:true})
       .then(() => console.log('DB synced with all models'))
       .catch(err => console.error('DB sync error:', err));
 
