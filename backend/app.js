@@ -26,7 +26,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use(passport.initialize());
 // routes
 const userRouter = require('./routes/user.routes.js');
 const hostRouter = require('./routes/host.routes.js');
