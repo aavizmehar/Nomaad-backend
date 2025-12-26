@@ -6,16 +6,13 @@ const sendAdminEmail = async (subject, htmlMessage) => {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT),
-      secure: false, // TLS false for port 587
+      secure: false,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      logger: true,
-      debug: true,
     });
 
-    // Verify SMTP connection
     await transporter.verify();
     console.log("SMTP connection OK");
 
@@ -32,14 +29,14 @@ const sendAdminEmail = async (subject, htmlMessage) => {
 
     const info = await transporter.sendMail(mailOptions);
 
-    console.log("✅ Email sent to:", info.accepted.join(", "));
+    console.log("Email sent to:", info.accepted.join(", "));
     if (info.rejected.length) {
-      console.warn("⚠️ Rejected recipients:", info.rejected.join(", "));
+      console.warn("Rejected recipients:", info.rejected.join(", "));
     }
     console.log("Message ID:", info.messageId);
 
   } catch (error) {
-    console.error("❌ Mail Error:", error.message);
+    console.error("Mail Error:", error.message);
   }
 };
 

@@ -16,20 +16,33 @@ const User = sequelize.define('User', {
       this.setDataValue('email', value.toLowerCase()); // convert to lowercase before saving
     }
   },
-  password: { type: DataTypes.STRING, allowNull: false },
+  google_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true
+  },
+   resetPasswordToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  resetPasswordExpiry: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  password: { type: DataTypes.STRING },
   role: { type: DataTypes.ENUM('volunteer', 'host', 'admin'), defaultValue: 'volunteer' },
   refreshToken: {
     type: DataTypes.STRING
   }
 }, { tableName: 'users', timestamps: true });
 
-
-User.beforeCreate(async function (user) {
-  if (user.changed("password")) {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
-    user.password = hashedPassword;
+User.beforeSave(async (user, options) => {
+  if (user.changed('password')) {
+    console.log("Hasing password for user:", user.email); // Debug log
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
   }
-})
+});
 User.prototype.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password)
 }
