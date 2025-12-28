@@ -45,7 +45,7 @@ app.use('/api/v1/programs', programPublicRouter);
 app.use('/api/v1/host/programs', programHostRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/contact', contactRouter);
-app.use('/auth', authRouter);
+app.use('/api/v1/auth', authRouter);
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Server is running' });
