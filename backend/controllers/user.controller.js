@@ -58,10 +58,10 @@ const registerUser = asyncHandler(async (req, res) => {
       httpOnly: true,
       secure: true
     };
-    sendAdminEmail(
-      "New User Registered",
-      `A new user with email <b>${email}</b> has joined as a <b>${role}</b>.`
-    );
+    // sendAdminEmail(
+    //   "New User Registered",
+    //   `A new user with email <b>${email}</b> has joined as a <b>${role}</b>.`
+    // );
     return res
       .status(201)
       .cookie("accessToken", accessToken, options)
