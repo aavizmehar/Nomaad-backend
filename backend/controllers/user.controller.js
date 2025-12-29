@@ -58,7 +58,7 @@ const registerUser = asyncHandler(async (req, res) => {
       httpOnly: true,
       secure: true
     };
-    await sendAdminEmail(
+    sendAdminEmail(
       "New User Registered",
       `A new user with email <b>${email}</b> has joined as a <b>${role}</b>.`
     );
