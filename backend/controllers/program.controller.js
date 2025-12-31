@@ -184,33 +184,40 @@ exports.addNewProgram = asyncHandler(async (req, res) => {
   }
 
   // Handle image uploads
- // Handle image uploads
-const programImages = [];
-if (req.files && req.files.length > 0) {
-  for (const file of req.files) {
-    // Check if buffer exists (memoryStorage uses .buffer, NOT .path)
-    if (!file.buffer) {
-      console.error("File buffer is missing for:", file.originalname);
-      continue;
-    }
-
-    try {
-      // Pass the BUFFER to your Cloudinary function
-      const uploaded = await uploadOnCloudinary(file.buffer); 
-      
-      if (uploaded && uploaded.url) {
-        programImages.push(uploaded.url);
-      }
-    } catch (uploadError) {
-      console.error("Cloudinary Upload Failed:", uploadError.message);
-      // Optional: stop the whole process or just skip this image
-    }
-  }
-}
-
-  // Create program
-  const program = await Program.create({
-    hostId: host.hostId,
+   const programImages = [];
+   console.log("📂 Received files:", req.files ? req.files.length : 0);
+ 
+   if (req.files && req.files.length > 0) {
+     for (const file of req.files) {
+       // Check if buffer exists (memoryStorage uses .buffer, NOT .path)
+       if (!file.buffer) {
+         console.error("File buffer is missing for:", file.originalname);
+         continue;
+       }
+ 
+       try {
+         console.log("⬆️ Uploading file to Cloudinary:", file.originalname);
+         // Pass the BUFFER to your Cloudinary function
+         const uploaded = await uploadOnCloudinary(file.buffer); 
+         
+         if (uploaded && uploaded.secure_url) {
+           console.log("✅ Upload success:", uploaded.secure_url);
+           programImages.push(uploaded.secure_url);
+         } else {
+             console.error("⚠️ Upload result missing secure_url:", uploaded);
+         }
+       } catch (uploadError) {
+         console.error("❌ Cloudinary Upload Failed:", uploadError.message);
+         // Optional: stop the whole process or just skip this image
+       }
+     }
+   } else {
+     console.log("⚠️ No files found in request.");
+   }
+ 
+   // Create program
+   console.log("💾 Creating program with images:", programImages);
+   const program = await Program.create({    hostId: host.hostId,
     title,
     description,
     category,
@@ -317,8 +324,8 @@ exports.editProgram = asyncHandler(async (req, res) => {
         continue;
       }
       const uploaded = await uploadOnCloudinary(file.buffer);
-      if (uploaded && uploaded.url) {
-        updatedImages.push(uploaded.url);
+      if (uploaded && uploaded.secure_url) {
+        updatedImages.push(uploaded.secure_url);
       }
     }
   }
