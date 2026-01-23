@@ -75,6 +75,14 @@ const Program = sequelize.define('Program', {
   }
 }, {
   tableName: 'programs',
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    { fields: ['hostId'] },
+    { fields: ['category'] },
+    { fields: ['subCategory'] },
+    { fields: ['location'] },
+    { fields: ['createdAt'] },
+    { fields: ['isActive', 'createdAt'] }
+  ]
 });
 module.exports = Program;
