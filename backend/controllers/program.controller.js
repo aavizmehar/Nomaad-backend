@@ -5,7 +5,7 @@ const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 const uploadOnCloudinary = require('../utils/cloudinary');
-const { 
+const {
   PROGRAM_CATEGORIES,
   CATEGORY_SUBCATEGORIES
 } = require('../constants/programCategories');
@@ -68,7 +68,7 @@ exports.getProgramById = asyncHandler(async (req, res) => {
     include: [
       {
         model: Host,
-        attributes: ['hostId', 'name', 'propertyName', 'location', 'propertyImages']
+        attributes: ['hostId', 'name', 'propertyName', 'location', 'propertyImages', 'contact']
       }
     ]
   });
@@ -149,10 +149,10 @@ exports.addNewProgram = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Host profile not found. Please complete your host profile first.");
   }
 
-  const { 
-    title, 
-    description, 
-    category, 
+  const {
+    title,
+    description,
+    category,
     subCategory,  // NEW
     location,
     duration,     // NEW
@@ -176,7 +176,7 @@ exports.addNewProgram = asyncHandler(async (req, res) => {
     if (allowedSubCategories.length > 0 && !allowedSubCategories.includes(subCategory)) {
       throw new ApiError(400, `Invalid subcategory for ${category}`);
     }
-    
+
     // If category doesn't support subcategories, ignore it
     if (allowedSubCategories.length === 0) {
       throw new ApiError(400, `${category} does not support subcategories`);
@@ -184,40 +184,41 @@ exports.addNewProgram = asyncHandler(async (req, res) => {
   }
 
   // Handle image uploads
-   const programImages = [];
-   console.log("📂 Received files:", req.files ? req.files.length : 0);
- 
-   if (req.files && req.files.length > 0) {
-     for (const file of req.files) {
-       // Check if buffer exists (memoryStorage uses .buffer, NOT .path)
-       if (!file.buffer) {
-         console.error("File buffer is missing for:", file.originalname);
-         continue;
-       }
- 
-       try {
-         console.log("⬆️ Uploading file to Cloudinary:", file.originalname);
-         // Pass the BUFFER to your Cloudinary function
-         const uploaded = await uploadOnCloudinary(file.buffer); 
-         
-         if (uploaded && uploaded.secure_url) {
-           console.log("✅ Upload success:", uploaded.secure_url);
-           programImages.push(uploaded.secure_url);
-         } else {
-             console.error("⚠️ Upload result missing secure_url:", uploaded);
-         }
-       } catch (uploadError) {
-         console.error("❌ Cloudinary Upload Failed:", uploadError.message);
-         // Optional: stop the whole process or just skip this image
-       }
-     }
-   } else {
-     console.log("⚠️ No files found in request.");
-   }
- 
-   // Create program
-   console.log("💾 Creating program with images:", programImages);
-   const program = await Program.create({    hostId: host.hostId,
+  const programImages = [];
+  console.log("📂 Received files:", req.files ? req.files.length : 0);
+
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      // Check if buffer exists (memoryStorage uses .buffer, NOT .path)
+      if (!file.buffer) {
+        console.error("File buffer is missing for:", file.originalname);
+        continue;
+      }
+
+      try {
+        console.log("⬆️ Uploading file to Cloudinary:", file.originalname);
+        // Pass the BUFFER to your Cloudinary function
+        const uploaded = await uploadOnCloudinary(file.buffer);
+
+        if (uploaded && uploaded.secure_url) {
+          console.log("✅ Upload success:", uploaded.secure_url);
+          programImages.push(uploaded.secure_url);
+        } else {
+          console.error("⚠️ Upload result missing secure_url:", uploaded);
+        }
+      } catch (uploadError) {
+        console.error("❌ Cloudinary Upload Failed:", uploadError.message);
+        // Optional: stop the whole process or just skip this image
+      }
+    }
+  } else {
+    console.log("⚠️ No files found in request.");
+  }
+
+  // Create program
+  console.log("💾 Creating program with images:", programImages);
+  const program = await Program.create({
+    hostId: host.hostId,
     title,
     description,
     category,
@@ -237,16 +238,16 @@ exports.addNewProgram = asyncHandler(async (req, res) => {
 // 3.5️⃣ GET AVAILABLE SUBCATEGORIES FOR A CATEGORY
 exports.getSubcategories = asyncHandler(async (req, res) => {
   const { category } = req.params;
-  
+
   const validCategories = Object.values(PROGRAM_CATEGORIES);
   if (!validCategories.includes(category)) {
     throw new ApiError(400, "Invalid category");
   }
 
   const subcategories = CATEGORY_SUBCATEGORIES[category] || [];
-  
+
   return res.status(200).json(
-    new ApiResponse(200, { 
+    new ApiResponse(200, {
       category,
       subcategories,
       hasSubcategories: subcategories.length > 0
@@ -294,9 +295,9 @@ exports.editProgram = asyncHandler(async (req, res) => {
   }
 
   const program = await Program.findOne({
-    where: { 
+    where: {
       programId,
-      hostId: host.hostId 
+      hostId: host.hostId
     }
   });
 
@@ -363,9 +364,9 @@ exports.deleteProgram = asyncHandler(async (req, res) => {
   }
 
   const program = await Program.findOne({
-    where: { 
+    where: {
       programId,
-      hostId: host.hostId 
+      hostId: host.hostId
     }
   });
 
